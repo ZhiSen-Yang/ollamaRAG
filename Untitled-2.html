@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>ChatGPT风格提问页面</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: #f5f5f5;
+      font-family: "Segoe UI", "PingFang SC", Arial, sans-serif;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 500px;
+      height: 90vh;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px #ddd;
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+    }
+
+    .chat-box {
+      flex: 1;
+      overflow-y: auto;
+      margin-bottom: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding-right: 6px;
+      scroll-behavior: smooth;
+      border: 1px solid #eee;
+      border-radius: 6px;
+      padding: 12px;
+    }
+
+    .message {
+      max-width: 80%;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 16px;
+      word-break: break-word;
+    }
+
+    .user {
+      align-self: flex-end;
+      background: #e0f7fa;
+    }
+
+    .assistant {
+      align-self: flex-start;
+      background: #f1f8e9;
+    }
+
+    .input-area {
+      display: flex;
+      gap: 8px;
+    }
+
+    .input-area input {
+      flex: 1;
+      padding: 8px 12px;
+      font-size: 16px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+
+    .input-area button {
+      padding: 8px 20px;
+      font-size: 16px;
+      border-radius: 4px;
+      border: none;
+      background: #1976d2;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    .input-area button:disabled {
+      background: #90caf9;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="chat-box" id="chatBox"></div>
+    <div class="input-area">
+      <input id="input" type="text" placeholder="请输入你的问题..." />
+      <button id="sendBtn">发送</button>
+    </div>
+  </div>
+
+  <script>
+    const input = document.getElementById('input');
+    const sendBtn = document.getElementById('sendBtn');
+    const chatBox = document.getElementById('chatBox');
+
+    function appendMessage(role, content = '') {
+      const div = document.createElement('div');
+      div.className = 'message ' + (role === 'user' ? 'user' : 'assistant');
+      div.textContent = content;
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
+      return div;
+    }
+
+    async function sendMessage() {
+      const question = input.value.trim();
+      if (!question) return;
+
+      appendMessage('user', question);
+      input.value = '';
+      input.disabled = true;
+      sendBtn.disabled = true;
+
+      const assistantMsg = appendMessage('assistant', '正在思考');
+
+      try {
+        const res = await fetch('http://localhost:8059/ocrpdf?a=' + encodeURIComponent(question), {
+          method: 'GET',
+          headers: {
+            Accept: 'text/event-stream',
+          }
+        });
+
+        if (!res.body) throw new Error('响应体为空');
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder('utf-8');
+        let buffer = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          buffer += chunk;
+
+          // 处理 SSE 格式：data: xxx\n\n
+          const lines = buffer.split('\n\n');
+         // buffer = lines.pop(); // 留给下次处理
+         const lastMsg = chatBox.querySelector('.assistant:last-child');
+        if (lastMsg) assistantMsg.textContent += chunk;
+                chatBox.scrollTop = chatBox.scrollHeight;
+                await new Promise(resolve => setTimeout(resolve, 20)); // 打字速度控制
+        }
+      } catch (e) {
+        assistantMsg.textContent = '请求失败，请重试。';
+      }
+
+      input.disabled = false;
+      sendBtn.disabled = false;
+      input.focus();
+    }
+
+    sendBtn.onclick = sendMessage;
+    input.onkeydown = function (e) {
+      if (e.key === 'Enter') sendMessage();
+    };
+  </script>
+</body>
+</html>

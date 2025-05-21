@@ -1,0 +1,9 @@
+from langchain_community.embeddings import OpenAIEmbeddings
+from langchain_community.llms.ollama import Ollama
+from langchain_community.vectorstores import Chroma
+from langchain_huggingface import HuggingFaceEmbeddings
+
+embedding_model = HuggingFaceEmbeddings(model_name="BAAI/bge-small-zh-v1.5")
+persist_dir = "./chroma_ollama"
+db = Chroma(persist_directory=persist_dir, embedding_function=embedding_model)
+llm = Ollama(model="deepseek-r1:8b")
