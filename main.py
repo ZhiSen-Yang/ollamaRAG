@@ -6,6 +6,7 @@ from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 from langchain.chains.chat_vector_db.prompts import prompt_template
 
+from fileUtils import get_save_dir
 from init import llm, db, config
 from task import start_file_watcher
 
@@ -22,7 +23,7 @@ def json_response(data=None, code=200, msg="success"):
         content_type="application/json; charset=utf-8"
     )
 @app.route("/ocrpdf", methods=['get'])
-def test():
+def ocrpdf():
     text=request.args.get('a')
     def generate():
         retriever = db.as_retriever(search_kwargs={"k": 3})
@@ -36,6 +37,12 @@ def test():
             time.sleep(0.01)
     return Response(generate(), content_type='text/event-stream; charset=utf-8')
 
+@app.route("/fileUpload", methods=['post'])
+def fileUpload():
+    file=request.files.get('file')
+    filename= get_save_dir(0)+file.filename
+    file.save(filename)
+    return jsonify({"success": 0})
 
 if __name__ == '__main__':
     try:
