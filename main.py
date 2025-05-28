@@ -6,7 +6,7 @@ from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 from langchain.chains.chat_vector_db.prompts import prompt_template
 
-from init import llm, db
+from init import llm, db, config
 from task import start_file_watcher
 
 app = Flask(__name__)
@@ -42,6 +42,7 @@ if __name__ == '__main__':
         start_file_watcher()
         print("✅ 文件监控线程已启动，主程序继续运行")
         app.config['JSON_AS_ASCII'] = False
+        print("项目名：", config["app"]["file"]["path"])
         #服务器名称不能有中文
         app.run(host='0.0.0.0',port=8059,threaded=True)
 
