@@ -21,14 +21,58 @@
 
     .container {
       width: 100%;
-      max-width: 500px;
+      max-width: 1200px;
       height: 90vh;
       background: #fff;
       border-radius: 8px;
       box-shadow: 0 2px 8px #ddd;
       display: flex;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    /* 左侧菜单样式 */
+    .sidebar {
+      width: 200px;
+      background: #2c3e50;
+      color: #fff;
+      padding: 20px 0;
+      display: flex;
       flex-direction: column;
-      padding: 16px;
+    }
+
+    .menu-item {
+      padding: 12px 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: background 0.3s;
+    }
+
+    .menu-item:hover,
+    .menu-item.active {
+      background: #34495e;
+    }
+
+    .menu-item i {
+      font-size: 18px;
+    }
+
+    /* 主内容区域样式 */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      overflow: hidden;
+    }
+
+    /* 聊天区域样式 */
+    .chat-section {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
     }
 
     .chat-box {
@@ -38,11 +82,9 @@
       display: flex;
       flex-direction: column;
       gap: 8px;
-      padding-right: 6px;
-      scroll-behavior: smooth;
+      padding: 12px;
       border: 1px solid #eee;
       border-radius: 6px;
-      padding: 12px;
     }
 
     .message {
@@ -90,19 +132,134 @@
       background: #90caf9;
       cursor: not-allowed;
     }
+
+    /* 文件上传区域样式 */
+    .upload-section {
+      display: none;
+      height: 100%;
+      flex-direction: column;
+    }
+
+    .upload-area {
+      flex: 1;
+      border: 2px dashed #ccc;
+      border-radius: 8px;
+      padding: 10px;  /* 减小内边距 */
+      text-align: center;
+      margin-bottom: 10px;  /* 减小底部间距 */
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;  /* 添加统一的间距 */
+    }
+
+    .upload-area i {
+      font-size: 36px;  /* 减小图标大小 */
+      margin-bottom: 0px;  /* 减小图标底部间距 */
+    }
+
+    .upload-area h3 {
+      margin: 0 0 0px 0;  /* 减小标题底部间距 */
+    }
+
+    .upload-area p {
+      margin: 0 0 8px 0;  /* 减小段落底部间距 */
+    }
+
+    .upload-area:hover {
+      border-color: #666;
+    }
+
+    .file-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #eee;
+      border-radius: 4px;
+    }
+
+    .file-list li {
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .file-list li:last-child {
+      border-bottom: none;
+    }
   </style>
 </head>
 
 <body>
   <div class="container">
-    <div class="chat-box" id="chatBox"></div>
-    <div class="input-area">
-      <input id="input" type="text" placeholder="请输入你的问题..." />
-      <button id="sendBtn">发送</button>
+    <!-- 左侧菜单 -->
+    <div class="sidebar">
+      <div class="menu-item active" onclick="switchSection('chat')">
+        <i>💬</i>
+        <span>对话</span>
+      </div>
+      <div class="menu-item" onclick="switchSection('upload')">
+        <i>📁</i>
+        <span>文件上传</span>
+      </div>
+    </div>
+
+    <!-- 主内容区域 -->
+    <div class="main-content">
+      <!-- 聊天区域 -->
+      <div class="chat-section" id="chatSection">
+        <div class="chat-box" id="chatBox"></div>
+        <div class="input-area">
+          <input id="input" type="text" placeholder="请输入你的问题..." />
+          <button id="sendBtn">发送</button>
+        </div>
+      </div>
+
+      <!-- 文件上传区域 -->
+      <div class="upload-section" id="uploadSection">
+        <h2 style="text-align: left; margin: 0 0 16px 0; color: #333;">知识库文件上传</h2>
+        <div class="upload-area" id="dropZone">
+          <i style="font-size: 48px; margin-bottom: 20px;">📤</i>
+          <h3>文件上传区域</h3>
+          <p>点击或拖拽文件到此处上传<br>支持pdf、doc、html类型文件</p>
+          <!-- 修改 input 元素，添加 multiple 属性 -->
+          <input type="file" id="fileInput" multiple accept=".pdf,.doc,.docx,.html" style="display: none;">
+          <button onclick="document.getElementById('fileInput').click()"
+            style="background: #1976d2; color: #fff; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer;">
+            选择多个文件
+          </button>
+        </div>
+        <ul class="file-list" id="fileList"></ul>
+      </div>
     </div>
   </div>
 
   <script>
+    // 切换功能区域
+    function switchSection(section) {
+      const chatSection = document.getElementById('chatSection');
+      const uploadSection = document.getElementById('uploadSection');
+      const menuItems = document.querySelectorAll('.menu-item');
+
+      menuItems.forEach(item => item.classList.remove('active'));
+
+      if (section === 'chat') {
+        chatSection.style.display = 'flex';
+        uploadSection.style.display = 'none';
+        menuItems[0].classList.add('active');
+      } else {
+        chatSection.style.display = 'none';
+        uploadSection.style.display = 'flex';
+        menuItems[1].classList.add('active');
+      }
+    }
+
+    // 聊天功能
     const input = document.getElementById('input');
     const sendBtn = document.getElementById('sendBtn');
     const chatBox = document.getElementById('chatBox');
@@ -148,13 +305,11 @@
           const chunk = decoder.decode(value, { stream: true });
           buffer += chunk;
 
-          // 处理 SSE 格式：data: xxx\n\n
           const lines = buffer.split('\n\n');
-         // buffer = lines.pop(); // 留给下次处理
-         const lastMsg = chatBox.querySelector('.assistant:last-child');
-        if (lastMsg) assistantMsg.textContent += chunk;
-                chatBox.scrollTop = chatBox.scrollHeight;
-                await new Promise(resolve => setTimeout(resolve, 20)); // 打字速度控制
+          const lastMsg = chatBox.querySelector('.assistant:last-child');
+          if (lastMsg) assistantMsg.textContent += chunk;
+          chatBox.scrollTop = chatBox.scrollHeight;
+          await new Promise(resolve => setTimeout(resolve, 20));
         }
       } catch (e) {
         assistantMsg.textContent = '请求失败，请重试。';
@@ -169,6 +324,111 @@
     input.onkeydown = function (e) {
       if (e.key === 'Enter') sendMessage();
     };
+
+    // 文件上传功能
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const fileList = document.getElementById('fileList');
+
+    // 处理文件上传
+    async function uploadFiles(files) {
+      const formData = new FormData();
+      Array.from(files).forEach(file => {
+        formData.append('file', file); // 使用相同的字段名'files'添加多个文件
+      });
+
+      // 创建上传状态显示
+      const statusDiv = document.createElement('div');
+      statusDiv.textContent = `正在上传 ${files.length} 个文件...`;
+      fileList.appendChild(statusDiv);
+
+      try {
+        const response = await fetch('http://localhost:8059/fileUpload', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!response.ok) {
+          throw new Error('上传失败');
+        }
+
+        const result = await response.json();
+        statusDiv.textContent = `成功上传 ${files.length} 个文件`;
+        statusDiv.style.color = 'green';
+
+        // 显示每个文件的状态
+        Array.from(files).forEach(file => {
+          const li = document.createElement('li');
+          li.textContent = `${file.name} - 上传成功`;
+          li.style.color = 'green';
+          fileList.appendChild(li);
+        });
+      } catch (error) {
+        console.error('上传出错：', error);
+        statusDiv.textContent = '上传失败';
+        statusDiv.style.color = 'red';
+
+        // 显示每个文件的失败状态
+        Array.from(files).forEach(file => {
+          const li = document.createElement('li');
+          li.textContent = `${file.name} - 上传失败`;
+          li.style.color = 'red';
+          fileList.appendChild(li);
+        });
+      }
+    }
+
+    // 处理文件选择
+    fileInput.addEventListener('change', (e) => {
+      const files = e.target.files;
+      if (files.length > 0) {
+        uploadFiles(files);
+      }
+      e.target.value = ''; // 清空 input 值，允许重复选择相同文件
+    });
+
+    // 处理拖拽
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.style.borderColor = '#1976d2';
+    });
+
+    dropZone.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      dropZone.style.borderColor = '#ccc';
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.style.borderColor = '#ccc';
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        uploadFiles(files);
+      }
+    });
+
+    // 点击上传区域触发文件选择
+    dropZone.addEventListener('click', () => {
+      fileInput.click();
+    });
+    function handleFiles(files) {
+      Array.from(files).forEach(file => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <span>${file.name} (${formatFileSize(file.size)})</span>
+          <button onclick="this.parentElement.remove()" style="background: none; border: none; color: #f44336; cursor: pointer;">删除</button>
+        `;
+        fileList.appendChild(li);
+      });
+    }
+
+    function formatFileSize(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
   </script>
 </body>
 </html>

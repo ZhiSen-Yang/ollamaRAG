@@ -53,6 +53,7 @@ def update_vector_db():
                 print(f"🗑️ 已删除本地文档: {file}")
             except Exception as e:
                 print(f"❌ 处理文件出错: {file}，错误: {e}")
+                os.remove(full_path)
         time.sleep(10)
 
 

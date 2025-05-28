@@ -37,12 +37,31 @@ def ocrpdf():
             time.sleep(0.01)
     return Response(generate(), content_type='text/event-stream; charset=utf-8')
 
-@app.route("/fileUpload", methods=['post'])
-def fileUpload():
-    file=request.files.get('file')
-    filename= get_save_dir(0)+file.filename
-    file.save(filename)
-    return jsonify({"success": 0})
+# @app.route("/fileUpload", methods=['post'])
+# def fileUpload():
+#     file=request.files.get('file')
+#     filename= get_save_dir(0)+file.filename
+#     file.save(filename)
+#     return jsonify({"success": 0})
+@app.route("/fileUpload", methods=['POST'])
+def file_upload():
+    files = request.files.getlist('file')  # 获取多个文件
+    if not files:
+        return jsonify({"success": 0, "msg": "没有接收到文件"})
+
+    saved_files = []
+    for file in files:
+        if file.filename == '':
+            continue
+        save_path = get_save_dir(0)+file.filename
+        file.save(save_path)
+        saved_files.append(file.filename)
+
+    return jsonify({
+        "success": 1,
+        "msg": f"{len(saved_files)} 个文件上传成功",
+        "files": saved_files
+    })
 
 if __name__ == '__main__':
     try:
