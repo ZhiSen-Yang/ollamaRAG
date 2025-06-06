@@ -1,0 +1,6 @@
+pyyaml
+langchain-community
+langchain-huggingface
+chromadb
+flask
+flask-cors
