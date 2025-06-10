@@ -4,3 +4,6 @@ langchain-huggingface
 chromadb
 flask
 flask-cors
+duckduckgo-search
+pypdf
+cryptography

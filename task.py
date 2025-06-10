@@ -5,7 +5,7 @@ from langchain_community.document_loaders import PyPDFLoader, UnstructuredWordDo
     UnstructuredHTMLLoader, UnstructuredEmailLoader, UnstructuredPowerPointLoader, UnstructuredExcelLoader, \
     UnstructuredEPubLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-
+from fileUtils import get_save_dir
 from init import db, config
 
 def get_loader(file_path):
@@ -36,6 +36,7 @@ def get_loader(file_path):
 def update_vector_db():
     folder_path= config["app"]["file"]["path"]
     splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100)
+    get_save_dir(0)
     while True:
         for file in os.listdir(folder_path):
             full_path = os.path.join(folder_path, file)

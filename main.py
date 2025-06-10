@@ -4,7 +4,10 @@ import time
 
 from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
+from langchain.agents import AgentType, initialize_agent
 from langchain.chains.chat_vector_db.prompts import prompt_template
+from langchain_community.tools import DuckDuckGoSearchRun
+from langchain_core.tools import Tool
 
 from fileUtils import get_save_dir
 from init import llm, db, config
@@ -25,17 +28,42 @@ def json_response(data=None, code=200, msg="success"):
 @app.route("/ocrpdf", methods=['get'])
 def ocrpdf():
     text=request.args.get('a')
+    search_tool = DuckDuckGoSearchRun(k=10)
+    search_result = search_tool.run(text)
+    print("联网搜索结果", {search_result})
     def generate():
         retriever = db.as_retriever(search_kwargs={"k": 3})
         docs = retriever.invoke(text)
         context = "\n".join([doc.page_content for doc in docs])
-        prompt = prompt_template.format(context=context, question=text)
+        print("RAG 检索结果：", context)
+        parts = []
+        if context.strip():
+            parts.append(f"【本地知识库结果】：\n{context}")
+        if search_result.strip():
+            parts.append(f"【联网搜索结果】：\n{search_result}")
+        parts.append(f"用户问题：{text}\n请先详细说明你的思考过程，然后给出答案：")
+        prompt ="\n\n".join(parts)
 
         for chunk in llm.stream(prompt):
            # print("📌 回答：", chunk, flush=True)
             yield chunk
             time.sleep(0.01)
     return Response(generate(), content_type='text/event-stream; charset=utf-8')
+@app.route("/ocrWebPdf", methods=['get'])
+def ocrWebPdf():
+    text=request.args.get('a')
+    search_tool = DuckDuckGoSearchRun()
+    search_result = search_tool.run(text)
+    print("联网搜索结果",{search_result})
+    # 将搜索结果交给模型生成回答
+    prompt = f"""根据以下搜索结果回答用户的问题：
+    问题：{text}
+    联网搜索结果：{search_result}
+    请用简洁准确的语言作答："""
+
+    answer = llm.invoke(prompt)
+    print(answer)
+    return Response(answer, content_type='text/event-stream; charset=utf-8')
 
 # @app.route("/fileUpload", methods=['post'])
 # def fileUpload():
